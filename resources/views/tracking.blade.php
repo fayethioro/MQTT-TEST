@@ -95,19 +95,13 @@
         }
 
         /* Personnaliser les marqueurs */
-        .driver-marker {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #3b82f6;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
+        /* Nouveau style de marqueur : une icône de voiture SVG moderne */
+        .driver-marker-custom {
+            width: 48px !important;
+            height: 48px !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
         }
     </style>
 </head>
@@ -129,12 +123,18 @@
 
     <script>
         // Configuration MQTT depuis Laravel
+        // const mqttConfig = {
+        //     host: '{{ $mqttHost ?? "127.0.0.1" }}',
+        //     port: '{{ $mqttPort ?? 9001 }}',
+        //     // Si WebSockets : wss://votre_host:9001
+        //     // Si MQTT direct : mqtt://votre_host:1883
+        // };
+
+
         const mqttConfig = {
-            host: '{{ $mqttHost ?? "127.0.0.1" }}',
-            port: '{{ $mqttPort ?? 9001 }}',
-            // Si WebSockets : wss://votre_host:9001
-            // Si MQTT direct : mqtt://votre_host:1883
-        };
+    host: '173.212.230.77',  // ← TON IP CONTABO
+    port: 9001,
+};
 
         console.log('🔧 Configuration MQTT:', mqttConfig);
 
@@ -153,6 +153,8 @@
         const client = mqtt.connect(`ws://${mqttConfig.host}:${mqttConfig.port}`, {
             reconnectPeriod: 5000,
             clientId: `izycab_dashboard_${Math.random().toString(36).substr(2, 9)}`,
+            username: 'mqtt_user',
+            password: 'Secure@Pass123',
         });
 
         // ===== ÉVÉNEMENTS MQTT =====
@@ -216,23 +218,43 @@
 
         // ===== FONCTIONS UTILITAIRES =====
 
+        // SVG car icon as a string
+        function getCarSVG(shortId) {
+            // Ajoute l'ID sous l'icône
+            return `
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <svg width="38" height="32" viewBox="0 0 38 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="12" width="34" height="12" rx="4" fill="#2563eb" stroke="#fff" stroke-width="2"/>
+                        <ellipse cx="8.5" cy="26.5" rx="4.5" ry="4.5" fill="#fff"/>
+                        <ellipse cx="29.5" cy="26.5" rx="4.5" ry="4.5" fill="#fff"/>
+                        <rect x="8" y="7" width="22" height="9" rx="4" fill="#60a5fa"/>
+                        <rect x="12" y="0.5" width="14" height="10" rx="2" fill="#3b82f6" stroke="#fff"/>
+                    </svg>
+                    <span style="color: #2563eb; font-weight: bold; font-size: 12px; margin-top: -2px;">${shortId}</span>
+                </div>
+            `;
+        }
+
         function updateDriverLocation(driverId, lat, lng, speed, accuracy, timestamp) {
-            const shortId = driverId.substring(0, 8).toUpperCase();
+            const shortId = driverId.substring(0, 4).toUpperCase();
 
             if (!drivers[driverId]) {
                 // Nouveau chauffeur
                 createDriverMarker(driverId, shortId, lat, lng, speed, accuracy, timestamp);
             } else {
                 // Mettre à jour le chauffeur existant
-                updateExistingMarker(driverId, lat, lng, speed, accuracy, timestamp);
+                updateExistingMarker(driverId, lat, lng, speed, accuracy, timestamp, shortId);
             }
         }
 
         function createDriverMarker(driverId, shortId, lat, lng, speed, accuracy, timestamp) {
-            // Créer une icône personnalisée
+            // Créer une icône personnalisée SVG voiture
             const icon = L.divIcon({
-                className: 'driver-marker',
-                html: shortId.charAt(0),
+                className: 'driver-marker-custom',
+                html: getCarSVG(shortId),
+                iconSize: [48, 48],
+                iconAnchor: [24, 32],
+                popupAnchor: [0, -34],
             });
 
             const marker = L.marker([lat, lng], { icon })
@@ -254,9 +276,19 @@
             console.log(`✅ Nouveau chauffeur: ${shortId} (${lat}, ${lng})`);
         }
 
-        function updateExistingMarker(driverId, lat, lng, speed, accuracy, timestamp) {
+        function updateExistingMarker(driverId, lat, lng, speed, accuracy, timestamp, shortId = null) {
             const driver = drivers[driverId];
-            const shortId = driverId.substring(0, 8).toUpperCase();
+            shortId = shortId || driverId.substring(0, 4).toUpperCase();
+
+            // Met à jour l'icône si besoin (nécessaire si l'ID a changé ou pour garder à jour l'icône custom)
+            const newIcon = L.divIcon({
+                className: 'driver-marker-custom',
+                html: getCarSVG(shortId),
+                iconSize: [48, 48],
+                iconAnchor: [24, 32],
+                popupAnchor: [0, -34],
+            });
+            driver.marker.setIcon(newIcon);
 
             // Animer le déplacement du marqueur
             driver.marker.setLatLng([lat, lng]);
@@ -279,6 +311,7 @@
             return `
                 <div class="popup-header">Chauffeur ${shortId}</div>
                 <div class="popup-info">
+                    <div>🚗 ID: <b>${driverId}</b></div>
                     <div>📍 Lat: ${lat.toFixed(4)}</div>
                     <div>📍 Lng: ${lng.toFixed(4)}</div>
                     <div class="popup-speed">⚡ ${speedDisplay}</div>

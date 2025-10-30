@@ -21,3 +21,7 @@ Route::get('/', function () {
 Route::get('/tracking', function () {
     return view('trackingbis');
 });
+
+Route::get('/tracking/mqtt', function () {
+    return view('tracking');
+});
