@@ -8,9 +8,15 @@ use App\Services\MqttService;
 use App\Models\DriverLocation;
 use App\Jobs\ProcessDriverLocation;
 use Illuminate\Support\Facades\Log;
+use App\Events\DriverLocationUpdated;
 
 class DriverLocationController extends Controller
 {
+    public function index()
+    {
+        $drivers = DriverLocation::all();
+        return response()->json($drivers);
+    }
 
     public function update(Request $request)
     {
@@ -75,6 +81,7 @@ class DriverLocationController extends Controller
 
 
 
+
     public function updateMulti(Request $request)
     {
         // $user = $request->user(); // si tes chauffeurs s'authentifient via Sanctum
@@ -96,6 +103,35 @@ class DriverLocationController extends Controller
 
         return response()->json(['status' => 'accepted'], 202);
     }
+
+
+     // 📡 Le mobile envoie sa position
+     public function updateSansMqtt(Request $request)
+     {
+         $validated = $request->validate([
+             'driver_id' => 'required|uuid|exists:drivers,id',
+             'latitude'  => 'required|numeric|between:-90,90',
+             'longitude' => 'required|numeric|between:-180,180',
+             'speed'     => 'nullable|numeric',
+             'bearing'   => 'nullable|numeric|min:0|max:359',
+         ]);
+
+         DriverLocation::updateOrCreate(
+             ['driver_id' => $validated['driver_id']],
+             [
+                 'latitude'  => $validated['latitude'],
+                 'longitude' => $validated['longitude'],
+                 'speed'     => $validated['speed'] ?? null,
+                 'bearing'   => $validated['bearing'] ?? null,
+                 'updated_at'=> now(),
+             ]
+         );
+
+         return response()->json(['status' => 'ok']);
+     }
+
+
+
 
 
 }

@@ -19,5 +19,5 @@ Route::get('/', function () {
 
 
 Route::get('/tracking', function () {
-    return view('tracking');
+    return view('trackingbis');
 });
