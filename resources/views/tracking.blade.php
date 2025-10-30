@@ -132,7 +132,7 @@
 
 
         const mqttConfig = {
-    host: '173.212.230.77',  // ← TON IP CONTABO
+    host: '127.0.0.1',  // ← TON IP CONTABO
     port: 9001,
 };
 
@@ -154,7 +154,7 @@
             reconnectPeriod: 5000,
             clientId: `izycab_dashboard_${Math.random().toString(36).substr(2, 9)}`,
             username: 'mqtt_user',
-            password: 'Secure@Pass123',
+            password: 'password',
         });
 
         // ===== ÉVÉNEMENTS MQTT =====
