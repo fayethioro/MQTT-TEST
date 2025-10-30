@@ -133,7 +133,7 @@
 
         const mqttConfig = {
     host: '173.212.230.77',  // ← TON IP CONTABO
-    port: 9001,
+    port: 1883,
 };
 
         console.log('🔧 Configuration MQTT:', mqttConfig);
@@ -150,7 +150,7 @@
         let mqttConnected = false;
 
         // Connexion MQTT (WebSocket)
-        const client = mqtt.connect(`ws://${mqttConfig.host}:${mqttConfig.port}`, {
+        const client = mqtt.connect(`mqtt://${mqttConfig.host}:${mqttConfig.port}`, {
             reconnectPeriod: 5000,
             clientId: `izycab_dashboard_${Math.random().toString(36).substr(2, 9)}`,
             username: 'mqtt_user',
