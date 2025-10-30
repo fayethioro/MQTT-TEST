@@ -132,8 +132,8 @@
 
 
         const mqttConfig = {
-    host: '173.212.230.77',  // ← TON IP CONTABO
-    port: 1883,
+    host: '127.0.0.1',  // ← TON IP CONTABO
+    port: 9001,
 };
 
         console.log('🔧 Configuration MQTT:', mqttConfig);
